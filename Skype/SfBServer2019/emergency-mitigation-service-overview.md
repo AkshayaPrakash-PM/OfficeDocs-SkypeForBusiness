@@ -47,7 +47,75 @@ EMS checks OCS for available mitigations every hour. EMS subsequently downloads 
 
 Each mitigation is a temporary “fix” until the security update that fixes the vulnerability in the code is applied. EMS is not a replacement for Skype for Business SUs and CUs. However, it's the fastest and easiest way to mitigate the highest risks to internet-connected, on-premises SfB servers before updating. Customers do not have to undo the pre-existing mitigation when applying the SU or CU. The mitigation is automatically removed once a proper fix has been released.
 
+## Option to send diagnostic data to Microsoft
+When installing the Skype for Business Server 2019 Build 7.0.2046.521 or later, you’ll also notice a change to the license terms acceptance process. We have added the ability to send diagnostic data from your Skype for Business servers related to mitigations to protect you better. This data is sent to Microsoft when EMS checks for available mitigations.
 
+## EMS Connectivity
+EMS needs outbound connectivity to OCS to check for and download mitigations. 
+While EMS can be installed without connectivity to OCS, it must have connectivity to OCS to download and apply the latest mitigations. OCS must be reachable from the front-end server through the internet, on which Skype for Business Server is installed, for EMS to function correctly.
+
+|Endpoint|Address|Port|Description|
+|---|---|---|---|
+|Office Config Service|`https://config.officeapps.live.com/*`|443|Required endpoint for the Skype for Business Server EM service|
+
+
+You can verify that a Skype for Business server has connectivity to OCS by using the **Test-CsMitigationServiceConnectivity** cmdlet.
+
+## Manage sending diagnostic data to Microsoft
+Admin can use **Get-CsMitigationTelemetryConfiguration** cmdlet to check if diagnostic data is being sent. 
+**Set-CsMitigationTelemetryConfiguration**  cmdlet can be used to enable or disable sending diagnostic data at any point in time.
+
+## View Mitigations 
+use **Get-CsMitigation** cmdlet and for a more detailed view can export as an XML file using the *ExportAsXml* parameter
+
+## Disable auto apply of Mitigations 
+By default, the *MitigationsEnabled* parameter is set to *$true*.
+To disable automatic mitigation, run this command: 
+```Powershell
+Set-CsMitigationConfiguration - PoolFqdn <Pool1> -MitigationsEnabled $false
+```
+
+## Blocking mitigations
+
+If a mitigation critically affects the functionality of your SfB server and you accept the risk of exposing your servers to the vulnerabilities, you can block the mitigation and manually reverse it. 
+
+- Use the following cmdlet to block a mitigation. Replace M0001 with the mitigation you wish to block.
+  
+```Powershell
+Set-Csmitigation - PoolFqdn <poolName> -MitigationBlocked M0001
+```
+
+The cmdlet blocks the M0001 mitigation, which ensures that EMS will not reapply this mitigation in the next hourly cycle. 
+
+- To add more than one mitigation, add the Mitigation ID as S comma separated list
+```Powershell
+Set-Csmitigation - PoolFqdn <poolName> -MitigationBlocked M0001,M0002
+```
+> [!NOTE]
+> To manually remove the mitigation immediately, stop and restart EMS  
+
+## Reapply Mitigations
+
+You can remove one or more mitigations from the blocked mitigations list by:
+
+- Removing the Mitigation ID in the MitigationsBlocked parameter
+- Using the MitigationsApplied parameter
+  
+```Powershell
+Set-Csmitigation - PoolFqdn <poolName> -MitigationApplied M0001
+```
+- Use the Repair cmdlet
+  
+```Powershell
+Repair-CsMitigation
+```
 
 > [!NOTE]
-> The documentation for cmdlets will be made available soon.
+>  To manually reapply the mitigation immediately, stop and restart EMS 
+
+
+
+
+
+
+
